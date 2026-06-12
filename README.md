@@ -1,9 +1,24 @@
-**Natsuo OSINT Web Domain** is a high-performance 
-🕵️‍♂️ Passive Reconnaissance web application designed to automate subdomain discovery and attack surface mapping. 
-By leveraging 📜 Certificate Transparency (CT) logs via external APIs, the engine uncovers 
-hidden asset structures without sending a single direct packet to the target host—ensuring fully covert passive intelligence gathering.
+# 🪐 🧠 ⚔️ NATSUO OSINT WEB DOMAIN ⚔️ 🧠 🪐
+## 📊 🛡️ AUTOMATED SUBDOMAIN RECONNAISSANCE & ATTACK SURFACE MANAGEMENT 🛡️ 📊
 
-Engineered for 💻 security researchers, penetration testers, and bug bounty hunters who need an efficient, resilient tool to map target domain environments.
+<p align="center">
+  <img src="https://img.shields.io/badge/Security-OSINT-red?style=for-the-badge&logo=kali-linux&logoColor=white" alt="OSINT">
+  <img src="https://img.shields.io/badge/Recon-Passive-blue?style=for-the-badge&logo=dependabot&logoColor=white" alt="Passive Recon">
+  <img src="https://img.shields.io/badge/Database-SQLite-green?style=for-the-badge&logo=sqlite&logoColor=white" alt="SQLite">
+</p>
+
+---
+
+🕵️‍♂️ **Natsuo OSINT Web Domain** is a high-performance, enterprise-grade
+**Passive Reconnaissance** web application designed to completely automate subdomain discovery, asset tracking, and attack surface mapping. 
+
+📜 By leveraging advanced **Certificate Transparency (CT) logs** via distributed external APIs, the core engine uncovers deeply hidden infrastructure and asset structures 
+**without sending a single direct packet** to the target network. This guarantees a 100% stealthy, fully covert passive intelligence-gathering routine.
+
+### 💻 Engineered for:
+- 🎯 **Bug Bounty Hunters** mapping expansive scopes.
+- 🛡️ **Penetration Testers** looking for unindexed subdomains.
+- 🚀 **Security Engineers** managing external attack surfaces.
 
 ---
 
