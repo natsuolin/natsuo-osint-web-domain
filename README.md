@@ -88,7 +88,7 @@ You can pipe outputs into other tools (like nuclei, httpx, or custom automation)
 
 ## 📸 Screenshots
 
-![Natsuo OSINT Web Domain Dashboard](./natsuolin-osint.png)
+<img width="961" height="888" alt="natsuolin-osint" src="https://github.com/user-attachments/assets/c1946457-83b4-4920-a689-720351fb047f" />
 
 ---
 
