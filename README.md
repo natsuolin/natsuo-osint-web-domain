@@ -88,8 +88,7 @@ You can pipe outputs into other tools (like nuclei, httpx, or custom automation)
 
 📸 Screenshots
 
-<img width="961" height="888" alt="image" src="https://github.com/user-attachments/assets/1517bbb2-5d14-4db7-9a40-cec8b2e0a5fb" />
-
+![Dashboard Funcionando](natsuolin-osint.png)
 
 🤝 ContributingContributions make the open-source community an amazing place to learn and build.
 
