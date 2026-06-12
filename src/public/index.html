@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Natsuo OSINT - Subdomain Finder</title>
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #0f172a;
+            color: #f8fafc;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* Sidebar container imitating modern LLM chat histories */
+        .sidebar {
+            width: 260px;
+            background-color: #1e293b;
+            border-right: 1px solid #334155;
+            display: flex;
+            flex-direction: column;
+            padding: 15px;
+            box-sizing: border-box;
+        }
+        .sidebar h2 {
+            font-size: 16px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #94a3b8;
+            margin-top: 0;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #334155;
+        }
+        .history-list {
+            flex: 1;
+            overflow-y: auto;
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        .history-item {
+            padding: 12px;
+            background-color: #0f172a;
+            border: 1px solid #334155;
+            border-radius: 6px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .history-item:hover {
+            background-color: #2563eb;
+            border-color: #3b82f6;
+        }
+        .history-domain {
+            font-weight: bold;
+            font-size: 14px;
+            word-break: break-all;
+        }
+        .history-meta {
+            font-size: 11px;
+            color: #94a3b8;
+            margin-top: 4px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        /* Main Workspace Content View */
+        .main-content {
+            flex: 1;
+            padding: 40px;
+            overflow-y: auto;
+            box-sizing: border-box;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+        .search-box {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        input {
+            flex: 1;
+            padding: 12px;
+            border-radius: 6px;
+            border: 1px solid #334155;
+            background-color: #1e293b;
+            color: #fff;
+            font-size: 16px;
+        }
+        button {
+            padding: 12px 24px;
+            border-radius: 6px;
+            border: none;
+            background-color: #2563eb;
+            color: #fff;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        button:hover { background-color: #1d4ed8; }
+        button:disabled { background-color: #475569; cursor: not-allowed; opacity: 0.6; }
+        
+        .export-btn {
+            background-color: #16a34a;
+            margin-bottom: 20px;
+            display: none;
+        }
+        .export-btn:hover { background-color: #15803d; }
+
+        .loading-container {
+            display: none;
+            text-align: center;
+            margin: 30px 0;
+            padding: 20px;
+            background-color: #1e293b;
+            border-radius: 8px;
+            border: 1px dashed #38bdf8;
+        }
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #334155;
+            border-top: 4px solid #38bdf8;
+            border-radius: 50%;
+            margin: 0 auto 15px auto;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .loading-text {
+            color: #38bdf8;
+            font-weight: 500;
+            font-size: 15px;
+        }
+
+        .lists {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        .card {
+            background-color: #1e293b;
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid #334155;
+        }
+        .online-title { color: #4ade80; }
+        .offline-title { color: #f87171; }
+        ul { list-style: none; padding: 0; max-height: 500px; overflow-y: auto; }
+        li { padding: 8px 0; border-bottom: 1px solid #334155; font-family: monospace; font-size: 14px; }
+        li:last-child { border-bottom: none; }
+    </style>
+</head>
+<body>
+
+<div class="sidebar">
+    <h2>📋 Scan History</h2>
+    <ul id="historyList" class="history-list">
+        </ul>
+</div>
+
+<div class="main-content">
+    <div class="container">
+        <h1>🕵️‍♂️ Subdomain Reconnaissance Panel</h1>
+        <p>Enter a target domain to extract and verify subdomains using OSINT techniques.</p>
+
+        <div class="search-box">
+            <input type="text" id="domainInput" placeholder="example.com" required>
+            <button id="scanBtn" onclick="startScan()">Scan Target</button>
+        </div>
+
+        <button id="exportBtn" class="export-btn" onclick="exportToExcel()">📊 Export Results to Excel</button>
+
+        <div id="loadingWrapper" class="loading-container">
+            <div class="spinner"></div>
+            <div class="loading-text">📡 Querying CT infrastructure registry & validating DNS records... Please wait.</div>
+        </div>
+
+        <div class="lists">
+            <div class="card">
+                <h3 class="online-title">🟢 Active Subdomains</h3>
+                <ul id="onlineList"></ul>
+            </div>
+            <div class="card">
+                <h3 class="offline-title">🔴 Offline / Historical</h3>
+                <ul id="offlineList"></ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    let currentScanResults = [];
+    let currentTargetDomain = '';
+
+    // Automatically download history timeline on layout rendering
+    window.addEventListener('DOMContentLoaded', loadHistorySidebar);
+
+    /**
+     * Pulls data chunks from SQLite history log and populates the sidebar
+     */
+    async function loadHistorySidebar() {
+        const historyList = document.getElementById('historyList');
+        try {
+            const response = await fetch('/api/history');
+            const data = await response.json();
+
+            if (!data.success) return;
+            historyList.innerHTML = '';
+
+            data.history.forEach(item => {
+                const li = document.createElement('li');
+                li.className = 'history-item';
+                
+                // Format SQLite timestamp (YYYY-MM-DD HH:MM:SS) roughly
+                const shortDate = item.scanned_at.split(' ')[0] || item.scanned_at;
+
+                li.innerHTML = `
+                    <div class="history-domain">${item.domain}</div>
+                    <div class="history-meta">
+                        <span>📅 ${shortDate}</span>
+                        <span>📦 Total: ${item.total_found}</span>
+                    </div>
+                `;
+                
+                // Clicking an item parses cached string data instantly without requesting lookups again
+                li.onclick = () => renderStaticResults(item.domain, JSON.parse(item.results_json));
+                historyList.appendChild(li);
+            });
+        } catch (error) {
+            console.error('Failed to populate sidebar navigation rows:', error);
+        }
+    }
+
+    /**
+     * Local parser callback to render snapshot logs instantly from history array records
+     */
+    function renderStaticResults(domain, results) {
+        const exportBtn = document.getElementById('exportBtn');
+        const onlineList = document.getElementById('onlineList');
+        const offlineList = document.getElementById('offlineList');
+        document.getElementById('domainInput').value = domain;
+
+        currentScanResults = results;
+        currentTargetDomain = domain;
+
+        onlineList.innerHTML = '';
+        offlineList.innerHTML = '';
+
+        results.forEach(item => {
+            const li = document.createElement('li');
+            li.textContent = item.subdomain;
+            if (item.status === 'ONLINE') {
+                onlineList.appendChild(li);
+            } else {
+                offlineList.appendChild(li);
+            }
+        });
+
+        exportBtn.style.display = results.length > 0 ? 'inline-block' : 'none';
+    }
+
+    async function startScan() {
+        const domainInput = document.getElementById('domainInput').value.trim();
+        const scanBtn = document.getElementById('scanBtn');
+        const exportBtn = document.getElementById('exportBtn');
+        const loadingWrapper = document.getElementById('loadingWrapper');
+        const onlineList = document.getElementById('onlineList');
+        const offlineList = document.getElementById('offlineList');
+
+        if (!domainInput) {
+            alert('Please enter a target domain.');
+            return;
+        }
+
+        currentScanResults = [];
+        currentTargetDomain = domainInput;
+        exportBtn.style.display = 'none';
+        onlineList.innerHTML = '';
+        offlineList.innerHTML = '';
+        
+        loadingWrapper.style.display = 'block';
+        scanBtn.disabled = true;
+
+        try {
+            const response = await fetch('/api/scan', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ domain: domainInput })
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.error || 'Failed to complete scan execution.');
+            }
+
+            currentScanResults = data.results;
+
+            data.results.forEach(item => {
+                const li = document.createElement('li');
+                li.textContent = item.subdomain;
+
+                if (item.status === 'ONLINE') {
+                    onlineList.appendChild(li);
+                } else {
+                    offlineList.appendChild(li);
+                }
+            });
+
+            if (data.results.length === 0) {
+                onlineList.innerHTML = '<li>No targets found.</li>';
+            } else {
+                exportBtn.style.display = 'inline-block';
+            }
+
+            // Reload sidebar array to update data chunks inside list immediately
+            await loadHistorySidebar();
+
+        } catch (error) {
+            alert(`Error: ${error.message}`);
+        } finally {
+            loadingWrapper.style.display = 'none';
+            scanBtn.disabled = false;
+        }
+    }
+
+    function exportToExcel() {
+        if (!currentScanResults || currentScanResults.length === 0) return;
+
+        const dataRows = currentScanResults.map(item => ({
+            'Subdomain': item.subdomain,
+            'Status': item.status
+        }));
+
+        const worksheet = XLSX.utils.json_to_sheet(dataRows);
+        worksheet['!cols'] = [{ wch: 40 }, { wch: 15 }];
+
+        const workbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workbook, worksheet, "Recon Results");
+
+        const fileName = `osint_subdomains_${currentTargetDomain.replace(/[^a-z0-9]/gi, '_')}.xlsx`;
+        XLSX.writeFile(workbook, fileName);
+    }
+</script>
+</body>
+</html>

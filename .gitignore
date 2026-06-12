@@ -1,0 +1,11 @@
+# Dependency directories
+node_modules/
+
+# Local SQLite databases and storage files
+src/osint_history.db
+*.db
+*.db-journal
+
+# Operating system artifacts
+.DS_Store
+Thumbs.db
