@@ -86,10 +86,6 @@ You can pipe outputs into other tools (like nuclei, httpx, or custom automation)
 📥 Payload / Query ParameterPOST/scanTriggers a live passive OSINT subdomain discovery run.
 {"domain": "target.com"}GET/historical-scansFetches previously cached reconnaissance logs for a host.?domain=target.com
 
-## 📸 Screenshots
-
-<img width="961" height="888" alt="natsuolin-osint" src="https://github.com/user-attachments/assets/c1946457-83b4-4920-a689-720351fb047f" />
-
 ---
 
 ## 🤝 Contributing
